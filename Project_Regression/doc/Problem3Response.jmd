@@ -1,0 +1,106 @@
+## Problem 3
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem1.jl")  # Include the Problem2 module
+include("../src/Problem3.jl")  # Include the Problem3 module
+file_path = joinpath(dirname(@__DIR__), "data", "linear1.txt")
+data = readdlm(file_path)
+Y = data[:, 1]
+X = data[:, 2]
+a, b = bivariate(X, Y)
+
+x_range = range(minimum(X), stop=maximum(X), length=100)
+y_fit = a .+ b .* x_range
+
+    p = scatter(X, Y,
+        label="Data Points",
+        color=:blue,
+        marker=:o,
+        markersize=5,
+        title="Bivariate Regression: Y = $(round(a, digits=3)) + $(round(b, digits=3))X",
+        xlabel="X (Second Column)",
+        ylabel="Y (First Column)",
+        legend=:bottomleft,
+        size=(800, 600)
+    )
+
+    # 4. Plot the estimated function (green line)
+    plot!(x_range, y_fit,
+        label="Estimated Function",
+        color=:green,
+        linewidth=2
+    )
+
+    display(p)
+```
+#### Part c)
+```julia
+    # Define simulation parameters (True Parameters)
+    N = 100         # N samples
+    a_true = 5.0    # 'a'
+    b_true_vec = [2.0] # 'b'
+    o² = 0.1        # σ² 
+
+    # Generate the data
+    # X_out is 100x1 matrix, Y_data is 100-element vector
+    X_out, Y_data = noisyLinearMultiDim(N, a_true, b_true_vec; σ²=o²)
+    
+    # Extract the single feature (X) as a vector for bivariate
+    X_predictor = X_out[:, 1] 
+    
+    # --- Estimate Linear Function ---
+    a_est, b_est = bivariate(X_predictor, Y_data)
+
+    # --- Plotting ---
+
+    # 1. Create a range of X values for the regression line
+    X_range = range(minimum(X_predictor), stop=maximum(X_predictor), length=100)
+
+    # 2. Calculate the corresponding Y values from the fitted function
+    Y_fit = a_est .+ b_est .* X_range
+
+    # 3. Create the plot
+    plot_title = "Linear Estimation on Noisy Data (N=100, σ²=0.1)"
+    
+    p2 = scatter(
+        X_predictor, 
+        Y_data, 
+        label="Noisy Data Points", 
+        title=plot_title,
+        subtitle="True: Y = 5.0 + 2.0X, Estimated: Y = $(round(a_est, digits=3)) + $(round(b_est, digits=3))X",
+        xlabel="X (Feature)",
+        ylabel="Y (Response)",
+        legend=:topleft,
+        marker=(:o, 5, 0.7, :blue),
+        size=(800, 600)
+    )
+
+    # Line plot: estimated function plotted in green
+    plot!(
+        p2,
+        X_range, 
+        Y_fit, 
+        linewidth=3, 
+        linecolor=:green, 
+        linestyle=:solid, 
+        label="Estimated Function"
+    )
+
+    # Plot the true function for comparison
+    plot!(
+        p2,
+        X_range, 
+        a_true .+ b_true_vec[1] .* X_range, 
+        linewidth=1, 
+        linecolor=:red, 
+        linestyle=:dash, 
+        label="True Function"
+    )
+
+    # Display the plot
+    display(p2) 
+```

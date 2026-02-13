@@ -1,0 +1,873 @@
+## Problem 1
+
+#### Part a)
+
+#### Part b)
+```julia
+include("../src/Problem1.jl")  # Include the Problem2 module
+    # 1. Define simulation parameters
+    N_obs = 100                 # N samples
+    intercept = 5.0             # 'a'
+    coefficients = [2.0]        # 'b'
+    noise_var = 0.1             # σ² 
+    # Generate the data
+    X_out, Y_hat_results = noisyLinearMultiDim(N_obs, intercept, coefficients; σ²=noise_var)
+    
+    # 2. Prepare data for plotting Ŷ vs the only feature (X₁)
+    X1 = X_out[:, 1] 
+    Y_data = Y_hat_results
+
+    # 3. Define the true linear relationship line for comparison.
+    b1 = coefficients[1]
+    X_range = range(0, stop=1, length=100) 
+    true_line = intercept .+ b1 .* X_range 
+
+    # 4. Create the plot
+    plot_title = "Simulated Linear Data (N=100, a=5, b=2, σ²=0.1)"
+    
+    # Scatter plot: data points as “blue o”
+    p = scatter(
+        X1, 
+        Y_data, 
+        label="Noisy Data Points", 
+        title=plot_title,
+        xlabel="Feature X₁",
+        ylabel="Prediction Ŷ",
+        legend=:topleft,
+        marker=(:circle, 5, 0.7, :blue), # marker shape: circle, size: 5, alpha: 0.7, color: blue
+        markershape=:circle,
+        markercolor=:blue
+    )
+
+    # Line plot: clean linear equation plotted in green
+    plot!(
+        p,
+        X_range, 
+        true_line, 
+        linewidth=3, 
+        linecolor=:green, 
+        linestyle=:solid, 
+        label="True Model (Y = 5.0 + 2.0*X₁)"
+    )
+
+    display(p) 
+```
+#### Part c)
+```julia
+    # 1. Define simulation parameters for Dataset A: b = [1.0, 0.0]
+    N_obs_3D = 300              # N samples
+    intercept_3D = 5.0          # 'a'
+    coefficients_A = [1.0, 0.0] # 'b' (Feature 2 has zero influence)
+    noise_var_3D = 0.05         # σ² (low noise)
+
+    # 2. Generate Data for Dataset A
+    X_A, Y_A = noisyLinearMultiDim(N_obs_3D, intercept_3D, coefficients_A; σ²=noise_var_3D)
+    
+    # 3. Separate the two features for plotting:
+    # X_A[:, 1] is Feature 1 (X₁)
+    # X_A[:, 2] is Feature 2 (X₂)
+    X1_A = X_A[:, 1]
+    X2_A = X_A[:, 2]
+    
+    plot_title_A = "3D Scatter Plot A: b=[1.0, 0.0]"
+
+    # 4. Create the First 3D Scatter Plot (Dataset A)
+    pA = scatter(
+        X1_A, X2_A, Y_A, 
+        label="Noisy Data (N=300)",
+        title=plot_title_A,
+        xlabel="Feature X₁",
+        ylabel="Feature X₂",
+        zlabel="Prediction Ŷ",
+        marker=(:circle, 3, 0.7, :blue), 
+        markershape=:circle,
+        markercolor=:blue,
+        legend=:topright,
+        projection=:`3d`, 
+        camera=(30, 30) 
+    )
+
+    display(pA) # Display the first 3D scatter plot 
+
+
+    coefficients_B = [1.0, 2.0] 
+
+    X_B, Y_B = noisyLinearMultiDim(N_obs_3D, intercept_3D, coefficients_B; σ²=noise_var_3D)
+        
+    X1_B = X_B[:, 1]
+    X2_B = X_B[:, 2]
+
+    plot_title_B = "3D Scatter Plot B: b=[1.0, 2.0]"
+
+    # Create the Second 3D Scatter Plot (Dataset B)
+    pB = scatter(
+        X1_B, X2_B, Y_B, 
+        label="Noisy Data (N=300)",
+        title=plot_title_B,
+        xlabel="Feature X₁",
+        ylabel="Feature X₂",
+        zlabel="Prediction Ŷ",
+        marker=(:circle, 3, 0.7, :blue), 
+        markershape=:circle,
+        markercolor=:blue,
+        legend=:topright,
+        projection=:`3d`, 
+        camera=(30, 30) 
+    )
+
+    display(pB)
+```
+## Problem 2
+
+#### Part a)
+
+#### Part b)
+```julia
+include("../src/Problem2.jl")  # Include the Problem2 module
+N1 = 50
+o² = 0.05
+
+p = scatter(
+    noisySin(N1; σ²=o²)..., 
+    label="Noisy Data Points", 
+    title="Simulated Sinusoidal Data (N=50, σ²=0.09)",
+    xlabel="Feature X",
+    ylabel="Target Y",
+    legend=:topright,
+    markershape=:circle,
+    markercolor=:blue
+)
+plot!(
+    0:0.01:1,
+    sin.(2 * pi .* (0:0.01:1)),
+    label="True Function: sin(2πX)",
+    color=:green,
+    lw=2
+)
+display(p)
+```
+## Problem 3
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem1.jl")  # Include the Problem2 module
+include("../src/Problem3.jl")  # Include the Problem3 module
+file_path = joinpath(dirname(@__DIR__), "data", "linear1.txt")
+data = readdlm(file_path)
+Y = data[:, 1]
+X = data[:, 2]
+a, b = bivariate(X, Y)
+
+x_range = range(minimum(X), stop=maximum(X), length=100)
+y_fit = a .+ b .* x_range
+
+    p = scatter(X, Y,
+        label="Data Points",
+        color=:blue,
+        marker=:o,
+        markersize=5,
+        title="Bivariate Regression: Y = $(round(a, digits=3)) + $(round(b, digits=3))X",
+        xlabel="X (Second Column)",
+        ylabel="Y (First Column)",
+        legend=:bottomleft,
+        size=(800, 600)
+    )
+
+    # 4. Plot the estimated function (green line)
+    plot!(x_range, y_fit,
+        label="Estimated Function",
+        color=:green,
+        linewidth=2
+    )
+
+    display(p)
+```
+#### Part c)
+```julia
+    # Define simulation parameters (True Parameters)
+    N = 100         # N samples
+    a_true = 5.0    # 'a'
+    b_true_vec = [2.0] # 'b'
+    o² = 0.1        # σ² 
+
+    # Generate the data
+    # X_out is 100x1 matrix, Y_data is 100-element vector
+    X_out, Y_data = noisyLinearMultiDim(N, a_true, b_true_vec; σ²=o²)
+    
+    # Extract the single feature (X) as a vector for bivariate
+    X_predictor = X_out[:, 1] 
+    
+    # --- Estimate Linear Function ---
+    a_est, b_est = bivariate(X_predictor, Y_data)
+
+    # --- Plotting ---
+
+    # 1. Create a range of X values for the regression line
+    X_range = range(minimum(X_predictor), stop=maximum(X_predictor), length=100)
+
+    # 2. Calculate the corresponding Y values from the fitted function
+    Y_fit = a_est .+ b_est .* X_range
+
+    # 3. Create the plot
+    plot_title = "Linear Estimation on Noisy Data (N=100, σ²=0.1)"
+    
+    p2 = scatter(
+        X_predictor, 
+        Y_data, 
+        label="Noisy Data Points", 
+        title=plot_title,
+        subtitle="True: Y = 5.0 + 2.0X, Estimated: Y = $(round(a_est, digits=3)) + $(round(b_est, digits=3))X",
+        xlabel="X (Feature)",
+        ylabel="Y (Response)",
+        legend=:topleft,
+        marker=(:o, 5, 0.7, :blue),
+        size=(800, 600)
+    )
+
+    # Line plot: estimated function plotted in green
+    plot!(
+        p2,
+        X_range, 
+        Y_fit, 
+        linewidth=3, 
+        linecolor=:green, 
+        linestyle=:solid, 
+        label="Estimated Function"
+    )
+
+    # Plot the true function for comparison
+    plot!(
+        p2,
+        X_range, 
+        a_true .+ b_true_vec[1] .* X_range, 
+        linewidth=1, 
+        linecolor=:red, 
+        linestyle=:dash, 
+        label="True Function"
+    )
+
+    # Display the plot
+    display(p2) 
+```
+## Problem 4
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem1.jl")
+include("../src/Problem4.jl")
+file_path = joinpath(dirname(@__DIR__), "data", "linear2.txt")
+data = readdlm(file_path)
+𝐘 = data[:, 1]
+𝐗₁ = data[:, 2]
+𝐗₂ = data[:,3]
+â, b̂₁, b̂₂ = multivariate(𝐗₁,𝐗₂, 𝐘)
+
+# Define the estimated function
+estimated_function(𝐗₁, 𝐗₂) = â +  b̂₁ * 𝐗₁ + b̂₂ * 𝐗₂
+
+# Define the range for the surface plot (mesh grid)
+x1_range = range(minimum(𝐗₁) - 0.5, stop=maximum(𝐗₁) + 0.5, length=30)
+x2_range = range(minimum(𝐗₂) - 0.2, stop=maximum(𝐗₂) + 0.2, length=30)
+scatter(𝐗₁,𝐗₂,𝐘,
+    marker=:o,
+    markersize=5,
+    markercolor=:blue,
+    title="Multivariate Regression: Y = $(round(â, digits=3)) + $(round(b̂₁, digits=3))X₁ + $(round(b̂₂, digits=3))X₂",
+    xlabel="X₁",
+    ylabel="X₂",
+    zlabel="Y",
+    legend=false,
+    size=(800, 600),
+)
+plot!(x1_range, x2_range, estimated_function, 
+    st=:surface, 
+    alpha=0.5, 
+    color=:red, 
+    label="Estimated Surface", 
+    colorbar=false
+)
+```
+#### Part c)
+```julia
+X_matrix,Y_Matrix = noisyLinearMultiDim(100,5.0,[2.0,1.0];σ²=0.1) # Example usage
+X1 = X_matrix[:,1]
+X2 = X_matrix[:,2]
+
+A, B1, B2 = multivariate(X1, X2, Y_Matrix)
+estimated_function2(X1, X2) = A + B1 * X1 + B2 * X2
+x_min, x_max = 0.0, 1.0
+x1_range = range(x_min, stop=x_max, length=30) 
+x2_range = range(x_min, stop=x_max, length=30)
+
+scatter(X1, X2, Y_Matrix,
+    marker=:o,
+    markersize=5,
+    markercolor=:blue,
+    title="Simulated Multivariate Data (N=100, a=5, b1=2, b2=1, σ²=0.1)",
+    xlabel="Feature X₁",
+    ylabel="Feature X₂",
+    zlabel="Prediction Ŷ",
+    legend=false,
+    size=(800, 600),
+)
+
+plot!(x1_range, x2_range, estimated_function2, 
+    st=:surface, 
+    alpha=0.5, 
+    color=:red,
+    label="Estimated Surface", 
+    colorbar=false
+)
+```
+## Problem 5
+
+#### Part a)
+
+#### Part b)
+```julia
+include("../src/Problem5.jl")
+file_path = joinpath(dirname(@__DIR__), "data", "curvefitting.txt")
+data = readdlm(file_path)
+X_data = data[:, 1]
+Y_data = data[:, 2]
+
+X_plot = range(minimum(X_data), stop=maximum(X_data), length=200) |> collect
+
+# Define the True Function (assuming standard f(x) = sin(2*pi*x))
+true_sin(x) = sin(2 * π * x)
+
+degrees_to_plot = [0, 1, 3, 9]
+
+N_samples = 500
+# The noise variance sigma2=0.09 is now the default in noisySin, 
+# but we explicitly pass it for clarity since the loop also needs this value.
+sigma2 = 0.09
+# Generate TEST Data
+X_test, Y_test = noisySin(N_samples; σ²=sigma2)
+
+degrees_for_erms = 0:9
+test_erms_values = Float64[] # Store E_RMS for training set
+erms_values = Float64[]
+for M in degrees_for_erms
+    # Estimate weights
+    ŵ = polyfitLS(X_data, Y_data, M)
+
+    # Predict Y for the TRAINING data
+    Y_pred_train = predict_curve(X_data, ŵ)
+
+    # Calculate E_RMS and store it
+    erms = calculate_erms(Y_data, Y_pred_train)
+    push!(erms_values, erms)
+
+    # Predict on TEST data and calculate E_RMS_test
+    Y_test_pred = predict_curve(X_test, ŵ)
+    erms_test = calculate_erms(Y_test, Y_test_pred)
+    push!(test_erms_values, erms_test)
+
+    # --- PLOT GENERATION for specific degrees (M=0, 1, 3, 9) ---
+    if M in degrees_to_plot
+        # Predict Y over the smooth plotting range (X_plot)
+        Y_pred_curve = predict_curve(X_plot, ŵ)
+
+        p = scatter(X_data, Y_data,
+            label="Data Points (N=$(length(X_data)))",
+            color=:blue,
+            marker=:o,
+            markersize=5,
+            title="Polynomial Curve Fits (M=$(M))",
+            xlabel="X",
+            ylabel="Y",
+            legend=:topright,
+            size=(900, 600)
+        )
+
+        # Plot the True Sine Wave
+        plot!(p, X_plot, true_sin.(X_plot),
+            label="True f(x) = sin(2πx)",
+            linewidth=3,
+            linecolor=:darkgreen,
+            linestyle=:solid
+        )
+
+        # Plot the fitted curve
+        plot!(p, X_plot, Y_pred_curve,
+            label="M=$M Fit",
+            linewidth=2.5,
+            linecolor=:red,
+            linestyle=:dash,
+            alpha=0.8
+        )
+        display(p)
+    end
+end
+
+```
+#### Part c)
+```julia
+
+# Use log10 for better visualization of error decrease
+# log_erms = -log10.(erms_values)
+# test_log_erms = -log10.(test_erms_values)
+
+p_erms = plot(degrees_for_erms, erms_values,
+    label="Training E_RMS",
+    xlabel="Polynomial Degree (M)",
+    ylabel="Log₁₀(E_RMS)",
+    title="Root Mean Square Error vs. Model Complexity",
+    marker=:circle,
+    markercolor=:white,
+    markerstrokecolor=:blue,
+    markerstrokewidth=3,
+    linewidth=3,
+    linecolor=:blue,
+    markersize=10,
+    legend=:topleft,
+    size=(900, 600),
+    xticks=degrees_for_erms,
+    framestyle=:box,
+    gridalpha=0.4,
+)
+# Plotting the Test E_RMS on the same graph
+plot!(p_erms, degrees_for_erms, test_erms_values,
+    label="Test E_RMS",
+    color=:red,
+    linewidth=3,
+    marker=:circle,
+    markercolor=:white,        
+    markerstrokecolor=:red,    
+    markersize=10,
+    markerstrokewidth=3,
+)
+display(p_erms)
+```
+#### Part d)
+```julia
+N_overfit = 15
+M_overfit = 9
+
+# Generate sparse training data (15 points)
+X_sparse, Y_sparse = noisySin(N_overfit; σ²=sigma2)
+
+# Generate a dense set of X values for smooth plotting
+X_smooth = collect(range(0.0, stop=1.0, length=200))
+
+# True Sine Wave (for comparison)
+Y_true = sin.(2 * π * X_smooth)
+
+# --- Fitting ---
+w_overfit = polyfitLS(X_sparse, Y_sparse, M_overfit)
+
+# --- Prediction ---
+Y_fit = predict_curve(X_smooth, w_overfit)
+
+
+# --- Plotting the Overfitting Result ---
+p_overfit = plot(X_smooth, Y_true, 
+    label="True Function (sin(2πx))",
+    color=:green,
+    linewidth=3,
+    linestyle=:dash,
+    title="Overfitting Demonstration (N=$N_overfit, M=$M_overfit)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:topright,
+    size=(900, 600),
+    ylims=(-1.5, 1.5) 
+)
+
+# Plot the M=9 fit curve
+plot!(X_smooth, Y_fit, 
+    label="M=9 Polynomial Fit",
+    color=:magenta,
+    linewidth=2
+)
+
+# Plot the sparse data points
+scatter!(X_sparse, Y_sparse,
+    label="N=$N_overfit Data Points",
+    color=:black,
+    marker=:x,
+    markersize=6,
+    markerstrokecolor=:black
+)
+display(p_overfit)
+
+
+N_generalize_100 = 100
+M_generalize = 9
+
+# Generate more dense training data (100 points)
+X_sparse_100, Y_sparse_100 = noisySin(N_generalize_100; σ²=sigma2)
+
+# --- Fitting ---
+w_generalize_100 = polyfitLS(X_sparse_100, Y_sparse_100, M_generalize)
+
+# --- Prediction ---
+Y_fit_100 = predict_curve(X_smooth, w_generalize_100)
+
+
+# --- Plotting the Generalization Result ---
+p_generalization = plot(X_smooth, Y_true, 
+    label="True Function (sin(2πx))",
+    color=:green,
+    linewidth=3,
+    linestyle=:dash,
+    title="Generalization with More Data (N=$N_generalize_100, M=$M_generalize)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:topright,
+    size=(900, 600),
+    # Maintain Y limits for comparison
+    ylims=(-1.5, 1.5) 
+)
+
+# Plot the M=9 fit curve
+plot!(X_smooth, Y_fit_100, 
+    label="M=9 Polynomial Fit",
+    color=:orange,
+    linewidth=2
+)
+
+# Plot the sparse data points
+scatter!(X_sparse_100, Y_sparse_100,
+    label="N=$N_generalize_100 Data Points",
+    color=:black,
+    marker=:x,
+    markersize=6,
+    markerstrokecolor=:black
+)
+display(p_generalization)
+```
+## Problem 6
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem5.jl")
+include("../src/Problem6.jl")  
+file_path = joinpath(dirname(@__DIR__), "data", "curvefitting.txt")
+data = readdlm(file_path)
+X_data = data[:, 1]
+Y_data = data[:, 2]
+const N_data = length(X_data)
+
+const M_degree = 9                     
+const ln_lambda = -18.0                
+const lambda_penalty = exp(ln_lambda)  # Calculate lambda = e^(-18)
+
+# 1. Fit the model
+w_star = polyfitRegLS(X_data, Y_data, M_degree, lambda_penalty)
+
+# 2. Generate X values for plotting the curves
+X_range = range(0.0, stop=1.0, length=200)
+X_range_vector = collect(X_range)
+
+# 3. Generate the predictions
+Y_fit = predict_curve(X_range_vector, w_star)
+
+# 4. Generate the true sine wave for comparison
+Y_true_sin = sin.(2 * pi .* X_range_vector)
+
+
+# 5. Create the Plot
+p = plot(X_range_vector, Y_true_sin, 
+    label="True Function: sin(2πx)", 
+    color=:green, 
+    linewidth=2,
+    linestyle=:dash,
+    title="Ridge Regression (M=$M_degree, ln(λ)=$ln_lambda) - Overfitting Demo",
+    xlabel="X",
+    ylabel="Y",
+    legend=:bottomleft,
+    size=(800, 600)
+)
+
+# Plot the fitted curve
+plot!(p, X_range_vector, Y_fit, 
+    label="Fitted Curve (w*)", 
+    color=:red, 
+    linewidth=3, 
+    linealpha=0.8
+)
+
+# Plot the scatter data points
+scatter!(p, X_data, Y_data,
+    label="Data Points (N=10)",
+    color=:blue,
+    marker=:circle,
+    markercolor=:white,           
+    markerstrokecolor=:blue,     
+    markersize=6,
+    markeralpha=1.0
+)
+display(p)
+
+
+const lambda_penalty2 = 1.0
+const ln_lambda2 = 0.0                 
+# 1. Fit the model
+w_star2 = polyfitRegLS(X_data, Y_data, M_degree, lambda_penalty2)
+
+# 2. Generate the predictions
+Y_fit2 = predict_curve(X_range_vector, w_star2)
+
+
+
+# 5. Create the Plot
+p2 = plot(X_range_vector, Y_true_sin, 
+    label="True Function: sin(2πx)", 
+    color=:green, 
+    linewidth=2,
+    linestyle=:dash,
+    title="Ridge Regression (M=$M_degree, ln(λ)=$ln_lambda2)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:bottomleft,
+    size=(800, 600)
+)
+
+# Plot the fitted curve
+plot!(p2, X_range_vector, Y_fit2, 
+    label="Fitted Curve (w*)", 
+    color=:red, 
+    linewidth=3, 
+    linealpha=0.8
+)
+
+# Plot the scatter data points
+scatter!(p2, X_data, Y_data,
+    label="Data Points (N=10)",
+    color=:blue,
+    marker=:circle,
+    markercolor=:white,           
+    markerstrokecolor=:blue,     
+    markersize=6,
+    markeralpha=1.0
+)
+display(p2)
+```
+## Appendix: Source Code Listings
+##### Problem1.jl
+```julia; eval = false
+using Plots
+function noisyLinearMultiDim(N::Integer, a::Float64 , b::Vector{Float64}; σ²=0.001)
+    # The number of features (m) is determined by the length of the coefficient vector b
+    m = length(b)
+    
+    # 1. Generate the Feature Matrix (X)
+    # X_matrix is N rows (observations) by m columns (features).
+    # We use rand() to generate features from a standard Uniform distribution (0 to 1).
+    X = rand(N, m)
+    
+    # 2. Compute the deterministic part of the prediction (Intercept + Linear Predictor)
+    # The linear term is X_matrix * b.
+    linear_predictor = X* b
+    
+    # Add the intercept 'a' to all predictions
+    ŷ = linear_predictor .+ a
+
+    # 3. Generate the vector of random noise terms using built-in randn()
+    # randn(N) generates N samples from N(0, 1).
+    # Scale it by the standard deviation (sqrt(σ²)) to get N(0, σ²).
+    noise_std = sqrt(σ²)
+    noise_vector = randn(N) .* noise_std
+
+    # 4. Compute the final noisy prediction vector
+    Ŷ = ŷ + noise_vector
+
+    # 5. Return the matrix and the prediction vector as a tuple
+
+    return X::Matrix{Float64},Ŷ::Vector{Float64}
+end
+```
+##### Problem2.jl
+```julia; eval = false
+using Plots
+function noisySin(N::Integer;σ²=0.09)
+
+    # 1. Generate X_n: Drawn from Uniform distribution U(0, 1)
+    # rand(N) produces N samples uniformly distributed between 0 and 1.
+    X = rand(N)
+    
+    # 2. Calculate the Deterministic Sinusoidal Term: sin(2πX_n)
+    # The term 2π is calculated by 2 * pi
+    sin_term = sin.(2 * pi .* X)
+    
+    # 3. Generate the Noise Term: N(0, 0.09)
+    # The variance (σ²) is 0.09, so the standard deviation (σ) is sqrt(0.09) = 0.3
+    noise_std = sqrt(0.09)
+    
+    # randn(N) produces N samples from N(0, 1). We scale it by noise_std (0.3).
+    noise_vector = randn(N) .* noise_std
+    
+    # 4. Compute the Final Target Value: Y_n = sin(2πX_n) + N(0, 0.09)
+    Y = sin_term + noise_vector
+
+    return X::Vector{Float64},Y::Vector{Float64}
+end
+
+
+```
+##### Problem3.jl
+```julia; eval = false
+using Statistics
+using DelimitedFiles
+using Plots
+include("Problem1.jl")  # For noisyLinearMultiDim
+
+function bivariate(X::Vector{Float64}, Y::Vector{Float64})
+    Xˉ = mean(X)
+    Yˉ = mean(Y)
+    covariance = mean((X .- Xˉ) .* (Y .- Yˉ))
+    variance_X = mean((X .- Xˉ).^2)
+    b = covariance / variance_X
+    a = Yˉ - b * Xˉ
+    return a::Float64, b::Float64
+end 
+```
+##### Problem4.jl
+```julia; eval = false
+using Statistics
+using Plots
+using DelimitedFiles
+include("Problem1.jl")  # For noisyLinearMultiDim
+function multivariate(𝐗₁::Vector{Float64}, 𝐗₂::Vector{Float64}, 𝐘::Vector{Float64})
+    m = length(𝐘)
+# 1. Construct the Design Matrix (X)
+    # The first column is a column of ones for the intercept (a).
+    # hcat() horizontally concatenates the columns.
+    X = hcat(ones(m), 𝐗₁, 𝐗₂)
+
+    # 2. Calculate the Coefficients using the Normal Equation: B = (X' * X) \ (X' * Y)
+    # Normal Equation: B=(X'X)^-1 * X'Y
+    # Julia's backslash operator (\) solves the system of linear equations.
+    B = (X' * X) \ (X' * 𝐘)
+
+    # 3. Extract and Return the Float64 Coefficients
+    # B is a 3-element vector: [a, b1, b2]
+    a  = B[1]
+    b₁ = B[2]
+    b₂ = B[3]
+    return a::Float64, b₁::Float64, b₂::Float64
+end 
+```
+##### Problem5.jl
+```julia; eval = false
+using LinearAlgebra: pinv
+using DelimitedFiles
+using Statistics
+using Plots
+include("Problem2.jl")  # For noisySin
+function polyfitLS(𝐗::Vector{Float64}, 𝐘::Vector{Float64}, M::Integer)
+
+    # 1. Define dimensions and perform initial check
+    N = length(𝐗)
+
+    # The number of coefficients is M + 1 (for powers X^0 through X^M)
+    if N < M + 1
+        error("M must be less than the length of 𝐗 minus one (N ≥ M + 1)")
+    end
+
+    # 2. Construct the Design Matrix (Φ) - N x (M+1)
+    𝚽 = zeros(N, M + 1)
+
+    # Populate the columns of Φ with powers of X
+    for j in 0:M
+        𝚽[:, j+1] = 𝐗 .^ j
+    end
+
+    # 3. Calculate the Weight Vector using the Normal Equation - w = (ΦᵀΦ)⁻¹ * ΦᵀY
+
+    # Calculate ΦᵀΦ 
+    𝚽T𝚽 = 𝚽' * 𝚽
+
+    # Calculate ΦᵀY 
+    𝚽TY = 𝚽' * 𝐘
+
+    #  Solve (ΦᵀΦ * w = ΦᵀY) for w.
+    # Julia's left-division operator (\) is used.
+    𝐰 = 𝚽T𝚽 \ 𝚽TY
+
+    return 𝐰::Vector{Float64}
+end
+
+function predict_curve(X::Vector{Float64}, w::Vector{Float64})
+    M = length(w) - 1 # Polynomial degree
+    N = length(X)
+
+    #Construct the Design Matrix (Φ) for prediction data
+    Ŷ = zeros(N, M + 1)
+
+    for j in 0:M
+        Ŷ[:, j+1] = X .^ j
+    end
+
+    # Prediction is the matrix product: Ŷ * w
+    return Ŷ * w
+end
+
+function calculate_erms(Y_actual::Vector{Float64}, Y_predicted::Vector{Float64})
+    # Calculate the squared errors (Y_actual - Y_predicted)^2
+    squared_errors = (Y_actual .- Y_predicted) .^ 2
+
+    # Calculate the Mean of the Squared Errors (MSE)
+    mse = mean(squared_errors)
+
+    # Take the square root to get E_RMS
+    return sqrt(mse)
+end
+```
+##### Problem6.jl
+```julia; eval = false
+using LinearAlgebra
+function polyfitRegLS(𝐗::Vector{Float64}, 𝐘::Vector{Float64}, M::Integer, λ::Float64)
+    # 1. Define dimensions and perform initial check
+    N = length(𝐗)
+    
+    # Check if there are enough data points for the polynomial degree (M+1 coefficients)
+    if N < M + 1
+        error("N must be greater than or equal to M + 1 to solve the system.")
+    end
+    
+    # 2. Construct the Design Matrix (Φ) - N x (M+1)
+    # M+1 columns for powers X^0 (intercept) through X^M
+    𝚽 = zeros(N, M + 1) 
+    
+    # Populate the columns of Φ with powers of X
+    for j in 0:M
+        # X .^ j computes the j-th power element-wise for all elements in X
+        𝚽[:, j + 1] = 𝐗 .^ j 
+    end
+
+    # 3. Calculate the components of the Regularized Normal Equation
+    
+    # Calculate ΦᵀΦ (The relationship between input features)
+    𝚽T𝚽 = 𝚽' * 𝚽
+
+    # Calculate ΦᵀY (The relationship between features and target)
+    𝚽TY = 𝚽' * 𝐘
+
+    # 4. Apply Regularization (λI)
+    
+    # I is the Identity Matrix of size (M+1)x(M+1)
+    # The term (λ * I) is added to the diagonal of ΦᵀΦ
+    # This is the core of Ridge Regression: w* = (λI + ΦᵀΦ)⁻¹ * ΦᵀY
+    regularized_matrix = (λ * I) + 𝚽T𝚽
+
+    # 5. Solve for the Weight Vector (w*)
+    
+    # Julia's left-division operator (\) solves the linear system: 
+    # (regularized_matrix * w) = ΦTY for w.
+    𝐰 = regularized_matrix \ 𝚽TY
+
+    return 𝐰::Vector{Float64}
+end
+```

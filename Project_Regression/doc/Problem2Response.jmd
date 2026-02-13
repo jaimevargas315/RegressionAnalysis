@@ -1,0 +1,29 @@
+## Problem 2
+
+#### Part a)
+
+#### Part b)
+```julia
+include("../src/Problem2.jl")  # Include the Problem2 module
+N1 = 50
+o² = 0.05
+
+p = scatter(
+    noisySin(N1; σ²=o²)..., 
+    label="Noisy Data Points", 
+    title="Simulated Sinusoidal Data (N=50, σ²=0.09)",
+    xlabel="Feature X",
+    ylabel="Target Y",
+    legend=:topright,
+    markershape=:circle,
+    markercolor=:blue
+)
+plot!(
+    0:0.01:1,
+    sin.(2 * pi .* (0:0.01:1)),
+    label="True Function: sin(2πX)",
+    color=:green,
+    lw=2
+)
+display(p)
+```

@@ -1,0 +1,73 @@
+## Problem 4
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem1.jl")
+include("../src/Problem4.jl")
+file_path = joinpath(dirname(@__DIR__), "data", "linear2.txt")
+data = readdlm(file_path)
+𝐘 = data[:, 1]
+𝐗₁ = data[:, 2]
+𝐗₂ = data[:,3]
+â, b̂₁, b̂₂ = multivariate(𝐗₁,𝐗₂, 𝐘)
+
+# Define the estimated function
+estimated_function(𝐗₁, 𝐗₂) = â +  b̂₁ * 𝐗₁ + b̂₂ * 𝐗₂
+
+# Define the range for the surface plot (mesh grid)
+x1_range = range(minimum(𝐗₁) - 0.5, stop=maximum(𝐗₁) + 0.5, length=30)
+x2_range = range(minimum(𝐗₂) - 0.2, stop=maximum(𝐗₂) + 0.2, length=30)
+scatter(𝐗₁,𝐗₂,𝐘,
+    marker=:o,
+    markersize=5,
+    markercolor=:blue,
+    title="Multivariate Regression: Y = $(round(â, digits=3)) + $(round(b̂₁, digits=3))X₁ + $(round(b̂₂, digits=3))X₂",
+    xlabel="X₁",
+    ylabel="X₂",
+    zlabel="Y",
+    legend=false,
+    size=(800, 600),
+)
+plot!(x1_range, x2_range, estimated_function, 
+    st=:surface, 
+    alpha=0.5, 
+    color=:red, 
+    label="Estimated Surface", 
+    colorbar=false
+)
+```
+#### Part c)
+```julia
+X_matrix,Y_Matrix = noisyLinearMultiDim(100,5.0,[2.0,1.0];σ²=0.1) # Example usage
+X1 = X_matrix[:,1]
+X2 = X_matrix[:,2]
+
+A, B1, B2 = multivariate(X1, X2, Y_Matrix)
+estimated_function2(X1, X2) = A + B1 * X1 + B2 * X2
+x_min, x_max = 0.0, 1.0
+x1_range = range(x_min, stop=x_max, length=30) 
+x2_range = range(x_min, stop=x_max, length=30)
+
+scatter(X1, X2, Y_Matrix,
+    marker=:o,
+    markersize=5,
+    markercolor=:blue,
+    title="Simulated Multivariate Data (N=100, a=5, b1=2, b2=1, σ²=0.1)",
+    xlabel="Feature X₁",
+    ylabel="Feature X₂",
+    zlabel="Prediction Ŷ",
+    legend=false,
+    size=(800, 600),
+)
+
+plot!(x1_range, x2_range, estimated_function2, 
+    st=:surface, 
+    alpha=0.5, 
+    color=:red,
+    label="Estimated Surface", 
+    colorbar=false
+)
+```

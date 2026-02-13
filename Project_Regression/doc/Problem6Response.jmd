@@ -1,0 +1,110 @@
+## Problem 6
+
+#### Part a)
+
+#### Part b)
+```julia
+using DelimitedFiles
+include("../src/Problem5.jl")
+include("../src/Problem6.jl")  
+file_path = joinpath(dirname(@__DIR__), "data", "curvefitting.txt")
+data = readdlm(file_path)
+X_data = data[:, 1]
+Y_data = data[:, 2]
+const N_data = length(X_data)
+
+const M_degree = 9                     
+const ln_lambda = -18.0                
+const lambda_penalty = exp(ln_lambda)  # Calculate lambda = e^(-18)
+
+# 1. Fit the model
+w_star = polyfitRegLS(X_data, Y_data, M_degree, lambda_penalty)
+
+# 2. Generate X values for plotting the curves
+X_range = range(0.0, stop=1.0, length=200)
+X_range_vector = collect(X_range)
+
+# 3. Generate the predictions
+Y_fit = predict_curve(X_range_vector, w_star)
+
+# 4. Generate the true sine wave for comparison
+Y_true_sin = sin.(2 * pi .* X_range_vector)
+
+
+# 5. Create the Plot
+p = plot(X_range_vector, Y_true_sin, 
+    label="True Function: sin(2πx)", 
+    color=:green, 
+    linewidth=2,
+    linestyle=:dash,
+    title="Ridge Regression (M=$M_degree, ln(λ)=$ln_lambda) - Overfitting Demo",
+    xlabel="X",
+    ylabel="Y",
+    legend=:bottomleft,
+    size=(800, 600)
+)
+
+# Plot the fitted curve
+plot!(p, X_range_vector, Y_fit, 
+    label="Fitted Curve (w*)", 
+    color=:red, 
+    linewidth=3, 
+    linealpha=0.8
+)
+
+# Plot the scatter data points
+scatter!(p, X_data, Y_data,
+    label="Data Points (N=10)",
+    color=:blue,
+    marker=:circle,
+    markercolor=:white,           
+    markerstrokecolor=:blue,     
+    markersize=6,
+    markeralpha=1.0
+)
+display(p)
+
+
+const lambda_penalty2 = 1.0
+const ln_lambda2 = 0.0                 
+# 1. Fit the model
+w_star2 = polyfitRegLS(X_data, Y_data, M_degree, lambda_penalty2)
+
+# 2. Generate the predictions
+Y_fit2 = predict_curve(X_range_vector, w_star2)
+
+
+
+# 5. Create the Plot
+p2 = plot(X_range_vector, Y_true_sin, 
+    label="True Function: sin(2πx)", 
+    color=:green, 
+    linewidth=2,
+    linestyle=:dash,
+    title="Ridge Regression (M=$M_degree, ln(λ)=$ln_lambda2)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:bottomleft,
+    size=(800, 600)
+)
+
+# Plot the fitted curve
+plot!(p2, X_range_vector, Y_fit2, 
+    label="Fitted Curve (w*)", 
+    color=:red, 
+    linewidth=3, 
+    linealpha=0.8
+)
+
+# Plot the scatter data points
+scatter!(p2, X_data, Y_data,
+    label="Data Points (N=10)",
+    color=:blue,
+    marker=:circle,
+    markercolor=:white,           
+    markerstrokecolor=:blue,     
+    markersize=6,
+    markeralpha=1.0
+)
+display(p2)
+```

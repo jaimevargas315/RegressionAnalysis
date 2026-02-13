@@ -1,0 +1,219 @@
+## Problem 5
+
+#### Part a)
+
+#### Part b)
+```julia
+include("../src/Problem5.jl")
+file_path = joinpath(dirname(@__DIR__), "data", "curvefitting.txt")
+data = readdlm(file_path)
+X_data = data[:, 1]
+Y_data = data[:, 2]
+
+X_plot = range(minimum(X_data), stop=maximum(X_data), length=200) |> collect
+
+# Define the True Function (assuming standard f(x) = sin(2*pi*x))
+true_sin(x) = sin(2 * π * x)
+
+degrees_to_plot = [0, 1, 3, 9]
+
+N_samples = 500
+# The noise variance sigma2=0.09 is now the default in noisySin, 
+# but we explicitly pass it for clarity since the loop also needs this value.
+sigma2 = 0.09
+# Generate TEST Data
+X_test, Y_test = noisySin(N_samples; σ²=sigma2)
+
+degrees_for_erms = 0:9
+test_erms_values = Float64[] # Store E_RMS for training set
+erms_values = Float64[]
+for M in degrees_for_erms
+    # Estimate weights
+    ŵ = polyfitLS(X_data, Y_data, M)
+
+    # Predict Y for the TRAINING data
+    Y_pred_train = predict_curve(X_data, ŵ)
+
+    # Calculate E_RMS and store it
+    erms = calculate_erms(Y_data, Y_pred_train)
+    push!(erms_values, erms)
+
+    # Predict on TEST data and calculate E_RMS_test
+    Y_test_pred = predict_curve(X_test, ŵ)
+    erms_test = calculate_erms(Y_test, Y_test_pred)
+    push!(test_erms_values, erms_test)
+
+    # --- PLOT GENERATION for specific degrees (M=0, 1, 3, 9) ---
+    if M in degrees_to_plot
+        # Predict Y over the smooth plotting range (X_plot)
+        Y_pred_curve = predict_curve(X_plot, ŵ)
+
+        p = scatter(X_data, Y_data,
+            label="Data Points (N=$(length(X_data)))",
+            color=:blue,
+            marker=:o,
+            markersize=5,
+            title="Polynomial Curve Fits (M=$(M))",
+            xlabel="X",
+            ylabel="Y",
+            legend=:topright,
+            size=(900, 600)
+        )
+
+        # Plot the True Sine Wave
+        plot!(p, X_plot, true_sin.(X_plot),
+            label="True f(x) = sin(2πx)",
+            linewidth=3,
+            linecolor=:darkgreen,
+            linestyle=:solid
+        )
+
+        # Plot the fitted curve
+        plot!(p, X_plot, Y_pred_curve,
+            label="M=$M Fit",
+            linewidth=2.5,
+            linecolor=:red,
+            linestyle=:dash,
+            alpha=0.8
+        )
+        display(p)
+    end
+end
+
+```
+#### Part c)
+```julia
+
+# Use log10 for better visualization of error decrease
+# log_erms = -log10.(erms_values)
+# test_log_erms = -log10.(test_erms_values)
+
+p_erms = plot(degrees_for_erms, erms_values,
+    label="Training E_RMS",
+    xlabel="Polynomial Degree (M)",
+    ylabel="Log₁₀(E_RMS)",
+    title="Root Mean Square Error vs. Model Complexity",
+    marker=:circle,
+    markercolor=:white,
+    markerstrokecolor=:blue,
+    markerstrokewidth=3,
+    linewidth=3,
+    linecolor=:blue,
+    markersize=10,
+    legend=:topleft,
+    size=(900, 600),
+    xticks=degrees_for_erms,
+    framestyle=:box,
+    gridalpha=0.4,
+)
+# Plotting the Test E_RMS on the same graph
+plot!(p_erms, degrees_for_erms, test_erms_values,
+    label="Test E_RMS",
+    color=:red,
+    linewidth=3,
+    marker=:circle,
+    markercolor=:white,        
+    markerstrokecolor=:red,    
+    markersize=10,
+    markerstrokewidth=3,
+)
+display(p_erms)
+```
+#### Part d)
+```julia
+N_overfit = 15
+M_overfit = 9
+
+# Generate sparse training data (15 points)
+X_sparse, Y_sparse = noisySin(N_overfit; σ²=sigma2)
+
+# Generate a dense set of X values for smooth plotting
+X_smooth = collect(range(0.0, stop=1.0, length=200))
+
+# True Sine Wave (for comparison)
+Y_true = sin.(2 * π * X_smooth)
+
+# --- Fitting ---
+w_overfit = polyfitLS(X_sparse, Y_sparse, M_overfit)
+
+# --- Prediction ---
+Y_fit = predict_curve(X_smooth, w_overfit)
+
+
+# --- Plotting the Overfitting Result ---
+p_overfit = plot(X_smooth, Y_true, 
+    label="True Function (sin(2πx))",
+    color=:green,
+    linewidth=3,
+    linestyle=:dash,
+    title="Overfitting Demonstration (N=$N_overfit, M=$M_overfit)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:topright,
+    size=(900, 600),
+    ylims=(-1.5, 1.5) 
+)
+
+# Plot the M=9 fit curve
+plot!(X_smooth, Y_fit, 
+    label="M=9 Polynomial Fit",
+    color=:magenta,
+    linewidth=2
+)
+
+# Plot the sparse data points
+scatter!(X_sparse, Y_sparse,
+    label="N=$N_overfit Data Points",
+    color=:black,
+    marker=:x,
+    markersize=6,
+    markerstrokecolor=:black
+)
+display(p_overfit)
+
+
+N_generalize_100 = 100
+M_generalize = 9
+
+# Generate more dense training data (100 points)
+X_sparse_100, Y_sparse_100 = noisySin(N_generalize_100; σ²=sigma2)
+
+# --- Fitting ---
+w_generalize_100 = polyfitLS(X_sparse_100, Y_sparse_100, M_generalize)
+
+# --- Prediction ---
+Y_fit_100 = predict_curve(X_smooth, w_generalize_100)
+
+
+# --- Plotting the Generalization Result ---
+p_generalization = plot(X_smooth, Y_true, 
+    label="True Function (sin(2πx))",
+    color=:green,
+    linewidth=3,
+    linestyle=:dash,
+    title="Generalization with More Data (N=$N_generalize_100, M=$M_generalize)",
+    xlabel="X",
+    ylabel="Y",
+    legend=:topright,
+    size=(900, 600),
+    # Maintain Y limits for comparison
+    ylims=(-1.5, 1.5) 
+)
+
+# Plot the M=9 fit curve
+plot!(X_smooth, Y_fit_100, 
+    label="M=9 Polynomial Fit",
+    color=:orange,
+    linewidth=2
+)
+
+# Plot the sparse data points
+scatter!(X_sparse_100, Y_sparse_100,
+    label="N=$N_generalize_100 Data Points",
+    color=:black,
+    marker=:x,
+    markersize=6,
+    markerstrokecolor=:black
+)
+display(p_generalization)
+```
